@@ -1,16 +1,34 @@
 # leaflet-challenge
-Explanation of each line of code used to populate the map.
 
+
+This project creates an interactive map displaying earthquake data and tectonic plate boundaries using Leaflet.js.
+
+## Files
+
+-   `index.html`: Contains the HTML structure for the map.
+-   `script.js`: Contains the JavaScript code to fetch and display the data on the map.
+
+## Setup
+
+1.  **Open `index.html`:** Simply open the `index.html` file in your web browser. Ensure you have an internet connection, as the script fetches data from online sources.
+
+## Code Explanation (`script.js`)
+
+```javascript
 // Create the 'backgroundTiles' tile layer that will be the background of our map.
 let backgroundTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  attribution: '&copy; <a href="[https://www.openstreetmap.org/copyright](https://www.openstreetmap.org/copyright)">OpenStreetMap</a> contributors'
 });
+This line initializes the base map layer using Leaflet's L.tileLayer function. It fetches map tiles from OpenStreetMap, which provides the visual background of the map. The attribution property ensures proper copyright attribution for OpenStreetMap.
+JavaScript
 
 // OPTIONAL: Step 2
 // Create the 'altTiles' tile layer as a second background of the map
 let altTiles = L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+  attribution: '&copy; <a href="[https://www.openstreetmap.org/copyright](https://www.openstreetmap.org/copyright)">OpenStreetMap</a> contributors'
 });
+This creates an alternative base map layer, also from OpenStreetMap but with a different style. This allows the user to switch between different map appearances.
+JavaScript
 
 // Create the map object with center and zoom options.
 let mainMap = L.map("map", {
@@ -18,9 +36,13 @@ let mainMap = L.map("map", {
   zoom: 3,
   layers: [backgroundTiles] // Initialize with the backgroundTiles
 });
+This initializes the Leaflet map object itself. It associates the map with an HTML element with the ID "map", sets the initial center and zoom level, and adds the backgroundTiles layer to it.
+JavaScript
 
 // Then add the 'backgroundTiles' tile layer to the map.
 backgroundTiles.addTo(mainMap);
+This line explicitly adds the backgroundTiles layer to the created map. While it's already in the initial layers, this ensures it's properly added.
+JavaScript
 
 // OPTIONAL: Step 2
 // Create the layer groups, dataPoints, and lines for our two sets of data, tremors and plateBoundaries.
@@ -36,98 +58,66 @@ let overlayLayers = {
   "Tremors": tremors,
   "Plate Boundaries": plateBoundaries
 };
+This section creates Leaflet layer groups (L.LayerGroup) to organize the earthquake data (tremors) and tectonic plate data (plateBoundaries). It also sets up baseLayers and overlayLayers objects, which will be used in the layer control to allow users to toggle map layers.
+JavaScript
 
-// Add a control to the map that will allow the user to change which layers are visible.
 L.control.layers(baseLayers, overlayLayers).addTo(mainMap);
+This adds a Leaflet layer control to the map. This control provides a user interface for switching between base map layers and toggling overlay layers.
+JavaScript
 
-// Make a request that retrieves the tremor geoJSON data.
-d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson").then(function (dataPoints) {
-
-  // This function returns the style data for each of the tremors we plot on
-  // the map. Pass the intensity and depth of the tremor into two separate functions
-  // to calculate the color and size.
-  function pointStyle(feature) {
-    return {
-      fillColor: getColorValue(feature.geometry.coordinates[2]),
-      radius: getRadiusValue(feature.properties.mag),
-      color: "#000",
-      weight: 1,
-      opacity: 1,
-      fillOpacity: 0.8
-    };
-  }
-
-  // This function determines the color of the marker based on the depth of the tremor.
-  function getColorValue(depthValue) {
-    if (depthValue > 90) return "#ea2c2c";
-    if (depthValue > 70) return "#ea822c";
-    if (depthValue > 50) return "#ee9c00";
-    if (depthValue > 30) return "#eecc00";
-    if (depthValue > 10) return "#d4ee00";
-    return "#98ee00";
-  }
-
-  // This function determines the radius of the tremor marker based on its intensity.
-  function getRadiusValue(intensityValue) {
-    if (intensityValue === 0) return 1;
-    return intensityValue * 4;
-  }
-
-  // Add a GeoJSON layer to the map once the file is loaded.
-  L.geoJson(dataPoints, {
-    // Turn each feature into a circleMarker on the map.
-    pointToLayer: function (feature, latlng) {
-      return L.circleMarker(latlng);
-    },
-    // Set the style for each circleMarker using our pointStyle function.
-    style: pointStyle,
-    // Create a popup for each marker to display the intensity and location of the tremor after the marker has been created and styled
-    onEachFeature: function (feature, layer) {
-      layer.bindPopup(
-        "Intensity: " + feature.properties.mag + "<br>Depth: " + feature.geometry.coordinates[2] + "<br>Location: " + feature.properties.place
-      );
-    }
-    // OPTIONAL: Step 2
-    // Add the data to the tremor layer instead of directly to the map.
-  }).addTo(tremors);
-  tremors.addTo(mainMap);
-
-  // Create a legend control object.
-  let mapLegend = L.control({
-    position: "bottomright"
-  });
-
-  // Then add all the details for the legend
-  mapLegend.onAdd = function () {
-    let div = L.DomUtil.create("div", "info legend");
-
-    // Initialize depth intervals and colors for the legend
-    let depthRanges = [0, 10, 30, 50, 70, 90];
-    let colorRanges = ["#98ee00", "#d4ee00", "#eecc00", "#ee9c00", "#ea822c", "#ea2c2c"];
-
-    // Loop through our depth intervals to generate a label with a colored square for each interval.
-    for (let i = 0; i < depthRanges.length; i++) {
-      div.innerHTML +=
-        '<i style="background:' + colorRanges[i] + '"></i> ' +
-        depthRanges[i] + (depthRanges[i + 1] ? '&ndash;' + depthRanges[i + 1] + '<br>' : '+');
-    }
-
-    return div;
-  };
-
-  // Finally, add the legend to the map.
-  mapLegend.addTo(mainMap);
-
-  // OPTIONAL: Step 2
-  // Make a request to get our Tectonic Plate geoJSON data.
-  d3.json("https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json").then(function (plateData) {
-    // Save the geoJSON data, along with style information, to the plateBoundaries layer.
-    L.geoJson(plateData, {
-      color: "orange",
-      weight: 2
-    }).addTo(plateBoundaries);
-
-    // Then add the plateBoundaries layer to the map.
-    plateBoundaries.addTo(mainMap);
-  });
+d3.json("[https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson](https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson)").then(function (dataPoints) {
+  // ...
 });
+This uses the D3 library's d3.json function to fetch earthquake data in GeoJSON format from the USGS. The .then() method executes a function once the data is successfully retrieved.
+JavaScript
+
+function pointStyle(feature) {
+  // ...
+}
+
+function getColorValue(depthValue) {
+  // ...
+}
+
+function getRadiusValue(intensityValue) {
+  // ...
+}
+These functions define the visual style of the earthquake markers. pointStyle returns an object with style properties, getColorValue determines the marker color based on earthquake depth, and getRadiusValue determines the marker radius based on earthquake magnitude.
+JavaScript
+
+L.geoJson(dataPoints, {
+  // ...
+}).addTo(tremors);
+tremors.addTo(mainMap);
+This adds the fetched GeoJSON earthquake data to the map as circle markers using L.geoJson. It applies the defined styles and adds popups to the markers. The markers are added to the tremors layer group, which is then added to the map.
+JavaScript
+
+let mapLegend = L.control({
+  position: "bottomright"
+});
+
+mapLegend.onAdd = function () {
+  // ...
+};
+
+mapLegend.addTo(mainMap);
+This creates a Leaflet control object to display a legend on the map, explaining the color coding for earthquake depths.
+JavaScript
+
+d3.json("[https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json](https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json)").then(function (plateData) {
+  // ...
+});
+This fetches tectonic plate boundary data in GeoJSON format from a GitHub repository.
+JavaScript
+
+L.geoJson(plateData, {
+  // ...
+}).addTo(plateBoundaries);
+plateBoundaries.addTo(mainMap);
+This adds the tectonic plate boundary data to the map as lines. The lines are added to the plateBoundaries layer group, which is then added to the map.
+Dependencies
+Leaflet.js: For map display and interaction.
+D3.js: For fetching and parsing GeoJSON data.
+Data Sources
+Earthquake data: USGS Earthquake Hazards Program.
+Tectonic plate boundary data: Fraxen/tectonicplates on GitHub.
