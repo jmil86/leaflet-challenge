@@ -1,7 +1,7 @@
 # leaflet-challenge
 
 
-This project creates an interactive map displaying earthquake data and tectonic plate boundaries using Leaflet.js.
+This project creates an interactive map displaying earthquake data and tectonic plate boundaries using Leaflet.js
 
 ## Files
 
